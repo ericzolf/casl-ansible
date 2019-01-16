@@ -1,17 +1,28 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# usage example:
+# LIBVIRT_INV_VAR_PREFIX=myvar_ LIBVIRT_INV_VM_FILTER=.*test.* ./libvirt_inv.py --list
+# (see below for comments and other variables)
 
 import argparse
 import json
 import libvirt
 import pdb
+import os
+import re
 
 class Inventory(object):
 
     def __init__(self):
         self.parse_cli_args()
+        # filter on the name of the VMs present in libvirt
+        self.vm_filter = os.environ.get('LIBVIRT_INV_VM_FILTER', None)
+        # prefix for created host variables in the inventory
+        self.var_prefix = os.environ.get('LIBVIRT_INV_VAR_PREFIX','libvirt_inv_')
+        # URI to connect to libvirt
+        self.connection_uri = os.environ.get('LIBVIRT_INV_URI','qemu:///system')
 
         self.inventory = {"_meta": {"hostvars": {}}}
-        self.conn = libvirt.open("qemu:///system")
+        self.conn = libvirt.open(self.connection_uri)
 
         if self.args.list:
             self.handle_list()
@@ -23,18 +34,27 @@ class Inventory(object):
 
     def handle_list(self):
         groups = {}
-        ip_addrs = []
+        hosts = []
 
         domains = self.conn.listAllDomains()
 
+
         for dom in domains:
-           device = dom.interfaceAddresses(0).keys()[0]
-           device_ip = dom.interfaceAddresses(0)[device]['addrs'][0]['addr']
+           if dom.isActive() and (self.vm_filter is None or re.match(self.vm_filter, dom.name())):
+               # get rid of prefix until last underscore, which is not allowed in DNS hostnames
+               name = re.sub("^.*_", "", dom.name())
+               title = dom.metadata(libvirt.VIR_DOMAIN_METADATA_TITLE, None)
+               description = dom.metadata(libvirt.VIR_DOMAIN_METADATA_DESCRIPTION, None)
+               device = list(dom.interfaceAddresses(0))[0]
+               device_ip = dom.interfaceAddresses(0)[device]['addrs'][0]['addr']
 
-           ip_addrs.append(device_ip)
-           self.inventory["_meta"]["hostvars"].update({device_ip: {'vars': {}}})
+               hosts.append(name)
+               self.inventory["_meta"]["hostvars"].update({name: {
+                                   'ansible_host': device_ip,
+                                   self.var_prefix + 'title': title,
+                                   self.var_prefix + 'description': description }})
 
-        self.inventory.update({'libvirt': {'hosts': ip_addrs, 'vars':{}}})
+        self.inventory.update({'libvirt': {'hosts': hosts, 'vars':{}}})
 
 
     def parse_cli_args(self):
