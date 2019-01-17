@@ -1,0 +1,55 @@
+= Improvements and corrections for Libvirt as infra
+
+The following isn't a decision of things to do, just a rather random list of things that might (or might not) end in future version of the Libvirt integration. It is just easier to document those things as I work on the topic, rather than creating individual issues that might never be addressed.
+
+== Make the VM provisioning purely local
+
+It seems we can avoid spinning a web server to provide the ISO content by using a command line like the following:
+
+------------------------------------------------------------------------
+virt-install \
+  --name rhel7.5-Ceph-test-singlenode \
+  --os-variant rhel7 \
+  --initrd-inject=/home/pcfe/work/git/HouseNet/kickstart/RHEL75-Ceph-singlenode-ks.cfg \
+  --location /mnt/ISO_images/rhel-server-7.5-x86_64-dvd.iso \
+  --extra-args "ks=file:/RHEL75-Ceph-singlenode-ks.cfg console=ttyS0,115200" \
+  --ram 2048 \
+  --disk pool=default,boot_order=1,format=qcow2,bus=virtio,discard=unmap,sparse=yes,size=10 \
+  --disk pool=default,boot_order=2,format=qcow2,bus=virtio,discard=unmap,sparse=yes,size=5 \
+  --disk pool=default,boot_order=3,format=qcow2,bus=virtio,discard=unmap,sparse=yes,size=5 \
+  --disk pool=default,boot_order=4,format=qcow2,bus=virtio,discard=unmap,sparse=yes,size=5 \
+  --controller scsi,model=virtio-scsi \
+  --rng /dev/random \
+  --boot useserial=on \
+  --vcpus 1 \
+  --cpu host \
+  --nographics \
+  --accelerate \
+  --network network=default,model=virtio
+------------------------------------------------------------------------
+
+This would probably be a less intrusive and resource intensive approach.
+
+== Make the dynamic inventory script more flexible
+
+Could be useful to make it easier to add/remove nodes without configuring multiple places in the (static) inventory. Two ideas:
+
+- either add metadata to the created VMs (but how does it work exactly?).
+- or use the description field to pack information, e.g. using an ini or json format (quoting might be an issue here).
+
+== Split the inventory in infra and cluster inventories
+
+I'm thinking that it would be much more flexible and easier to maintain to split the inventory in a "cluster type" and an "infra type" and combine them with multiple  -i options, .e.g -i libvirt_inv/ -i 3_nodes_cluster_inv/.
+
+Just an idea at this stage and I'm not sure it's easily possible to get the expected flexiblity, but with the right dynamic script, it might be feasible.
+
+== Make the Libvirt inventory more robust
+
+. the inventory shouldn't fail if title or description is missing
+
+== Improve the playbooks / roles using ideas from others
+
+Following sources have been identified and could be used:
+
+- https://github.com/nmajorov/libvirt-okd
+- https://docs.google.com/document/d/1Mbd2v6j3AQlbiY_zbZF5fWWwXvenQf8EDw7oW5907Hs/edit?usp=drivesdk

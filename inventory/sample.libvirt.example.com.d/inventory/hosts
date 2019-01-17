@@ -1,10 +1,10 @@
 [infra]
-cloud-host.local.yml
+cloud-host.local
 
 [infra_vms]
-master.local.yml    
-infranode.local.yml 
-appnode.local.yml   
+master.local
+infranode.local
+appnode.local
 
 [cluster_hosts:children]
 OSEv3
@@ -32,13 +32,13 @@ infra_host
 app_host
 
 [master]
-master.local.yml
+master.local
 
 [infra_host]
-infranode.local.yml
+infranode.local
 
 [app_host]
-appnode.local.yml
+appnode.local
 
 [etcd]
-master.local.yml
+master.local

@@ -1,18 +1,15 @@
 ---
-libvirt_name: "master"
-libvirt_title: "Master"
-libvirt_description: "Master"
+libvirt_name: "ocp_master.local"
+libvirt_title: "OCP Master"
+libvirt_description: "Master for OpenShift"
 libvirt_memory: "2048"
 libvirt_vcpus: "1"
 libvirt_disk_size: "15"
 libvirt_os_variant: "rhel7"
 libvirt_iso: "~/Downloads/rhel-server-7.5-x86_64-dvd.iso"
 libvirt_ksfile: "{{ inventory_dir }}/../files/ks/master.ks"
-libvirt_network_hostif: "virbr0"
-libvirt_http_host: '192.168.122.1'
-libvirt_network_type: "bridge"
+libvirt_http_host: '192.168.123.1'
 
-infrahost: cloud-host.local.yml
-ansible_host: 192.168.122.10
+infrahost: cloud-host.local
 ansible_user: root
 ansible_ssh_pass: redhat

@@ -1,0 +1,142 @@
+= OpenShift on Libvirt using CASL
+:MYWORKDIR: ~/src
+// FIXME: how to get variables rendered in code blocks?
+
+== Introduction
+
+The aim of this setup is to get a flexible OpenShift installation which as little intrusive on the host as possible, under the assumption that a Libvirt installation will mostly be used on laptops or workstations, which also need to continue working well for other purposes.
+
+== Control Host Setup (one time, only)
+
+NOTE: These steps are a canned set of steps serving as an example, and may be different in your environment.
+
+Before getting started following this guide, you'll need the following:
+
+FIXME:: address docker installation and usage at a later stage.
+
+* Docker installed
+  ** RHEL/CentOS: `yum install -y docker`
+  ** Fedora: `dnf install -y docker`
+  ** **NOTE:** If you plan to run docker as yourself (non-root), your username must be added to the `docker` user group.
+
+* Ansible 2.7 or later installed
+  ** link:https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html[See Installation Guide]
+* python3-libvirt and/or python2-libvirt
+
+[source,bash]
+----
+cd {MYWORKDIR}/
+git clone https://github.com/redhat-cop/casl-ansible.git
+----
+
+* Run `ansible-galaxy` to pull in the necessary requirements for the CASL provisioning of OpenShift:
+
+NOTE: The target directory ( `galaxy` ) is **important** as the playbooks know to source roles and playbooks from that location.
+
+[source,bash]
+----
+cd {MYWORKDIR}/casl-ansible
+ansible-galaxy install -r casl-requirements.yml -p galaxy
+----
+
+== Libvirt setup
+
+The following needs to be set up on your Libvirt server before you can start:
+
+=== Setup a local dnsmasq
+
+Create a dummy network interface:
+
+------------------------------------------------------------------------
+sudo modprobe dummy
+sudo ip link add dummy0 type dummy
+sudo ip address add 192.168.129.1 dev dummy0
+sudo ip address show dev dummy0 up
+------------------------------------------------------------------------
+
+Start dnsmasq against this interface, defining our wildcard DNS domain *.ocp.ewl.example.com:
+
+------------------------------------------------------------------------
+sudo dnsmasq --interface=dummy0 --no-daemon --log-queries=extra --bind-interfaces --clear-on-reload --address=/ocp.ewl.example.com/192.168.122.122
+------------------------------------------------------------------------
+
+NOTE: the dnsmasq is hence only running on-demand but as it's the case of my OpenShift cluster as well, no big deal.
+
+CAUTION: I guess I had already opened the firewall accordingly and integrated beforehand Satellite 6 with my Libvirtd (e.g. `LIBVIRTD_ARGS="--listen"` in `/etc/sysconfig/libvirtd`, so there is more than the above to it.
+
+=== Create a separate network
+
+Call `sudo virsh net-create --file libvirt-network-definition.xml` 
+
+CAUTION: the network definition isn't persistent (on purpose for a start) and needs to be repeated before each start.
+
+
+TODO:: continue description !!!
+
+Cool! Now you're ready to provision OpenShift clusters on Libvirt.
+
+== Provision an OpenShift Cluster
+
+As an example, we'll provision the `sample.libvirt.example.com` cluster defined in the `{MYWORKDIR}/casl-ansible/inventory` directory.
+
+NOTE: Unless you already have a working inventory, it is recommended that you make a copy of the above mentioned sample inventory and keep it somewhere outside of the casl-ansible directory. This allows you to update/remove/change your casl-ansible source directory without losing your inventory. Also note that it may take some effort to get the inventory just right, hence it is very beneficial to keep it around for future use without having to redo everything.
+
+- make sure `/dev/loopN` isn't mounted on `/var/www/html/installXXX` if you try multiple times (seems to be a bug of the mount module that it doesn't recognize it).
+- copy and adapt the sample directory with files and inventory:
+* adapt the Libvirt specific parameters to make them compatible with your setup (especially the network)
+- export the variable `LIBVIRT_INV_VM_FILTER` to fit the libvirt names defined for your cluster's VMs, e.g. `export LIBVIRT_INV_VM_FILTER=^ocp_`.
+TODO:: continue to adapt / complete the following lines for Libvirt
+
+Run the `end-to-end` provisioning playbook via our link:../images/casl-ansible/[??? installer container image].
+
+[source,bash]
+----
+docker run -u `id -u` \
+      -v $HOME/.ssh/id_rsa:/opt/app-root/src/.ssh/id_rsa:Z \
+      -v $HOME/src/:/tmp/src:Z \
+      -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+      -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+      -e INVENTORY_DIR=/tmp/src/casl-ansible/inventory/sample.libvirt.example.com.d/inventory \
+      -e PLAYBOOK_FILE=/tmp/src/casl-ansible/playbooks/openshift/end-to-end.yml \
+      -e OPTS="-e libvirt_key_name=my-key-name" -t \
+      quay.io/redhat-cop/casl-ansible
+----
+
+NOTE: The above bind-mounts will map files and source directories to the correct locations within the control host container. Update the local paths per your environment for a successful run.
+
+NOTE: Depending on the SELinux configuration on your OS, you may or may not need the `:Z` at the end of the volume mounts.
+
+Done! Wait till the provisioning completes and you should have an operational OpenShift cluster. If something fails along the way, either update your inventory and re-run the above `end-to-end.yml` playbook, or it may be better to [delete the cluster](https://github.com/redhat-cop/casl-ansible#deleting-a-cluster) and re-start.
+
+== Updating a Cluster
+
+Once provisioned, a cluster may be adjusted/reconfigured as needed by updating the inventory and re-running the `end-to-end.yml` playbook.
+
+== Scaling Up and Down
+
+A cluster's Infra and App nodes may be scaled up and down by editing the following parameters in the `all.yml` file and then re-running the `end-to-end.yml` playbook as shown above.
+
+[source,yaml]
+----
+appnodes:
+  count: <REPLACE WITH NUMBER OF INSTANCES TO CREATE>
+infranodes:
+  count: <REPLACE WITH NUMBER OF INSTANCES TO CREATE>
+----
+
+== Deleting a Cluster
+
+A cluster can be decommissioned/deleted by re-using the same inventory with the `delete-cluster.yml` playbook found alongside the `end-to-end.yml` playbook.
+
+[source,bash]
+----
+docker run -it -u `id -u` \
+      -v $HOME/.ssh/id_rsa:/opt/app-root/src/.ssh/id_rsa:Z \
+      -v $HOME/src/:/tmp/src:Z \
+      -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \
+      -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
+      -e INVENTORY_DIR=/tmp/src/casl-ansible/inventory/sample.casl.example.com.d/inventory \
+      -e PLAYBOOK_FILE=/tmp/src/casl-ansible/playbooks/openshift/delete-cluster.yml \
+      -e OPTS="-e libvirt_key_name=my-key-name" -t \
+      quay.io/redhat-cop/casl-ansible
+----

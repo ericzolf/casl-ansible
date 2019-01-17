@@ -1,0 +1,16 @@
+<network ipv6='no'>
+  <name>ocp-network</name>
+  <forward mode='nat'/>
+  <bridge name='virbr3' stp='on' delay='0' />
+  <domain name='local' localOnly='no' />
+  <dns>
+    <host ip='192.168.123.2'> <!-- FIXME we need to resolve to the route -->
+      <hostname>apps.local</hostname>
+    </host>
+  </dns>
+  <ip address='192.168.123.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.123.1' end='192.168.123.254'/>
+    </dhcp>
+  </ip>
+</network>

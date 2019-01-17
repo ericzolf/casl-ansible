@@ -8,7 +8,7 @@ eula --agreed
 reboot
 
 # network
-network --bootproto=static --ip=192.168.122.11 --netmask=255.255.255.0 --gateway=192.168.122.1 --device=eth0 --noipv6 --activate --hostname=infranode --nameserver=192.168.122.1
+network --bootproto=dhcp --device=eth0 --noipv6 --activate --hostname=infranode.local
 
 # System timezone
 timezone US/Eastern --isUtc
