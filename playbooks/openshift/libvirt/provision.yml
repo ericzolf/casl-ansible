@@ -1,4 +1,4 @@
 ---
-- hosts: infrahost
+- hosts: infra
   roles:
     - ../../../galaxy/infra-ansible/roles/virt-install
