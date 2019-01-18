@@ -50,26 +50,29 @@ Create a dummy network interface:
 ------------------------------------------------------------------------
 sudo modprobe dummy
 sudo ip link add dummy0 type dummy
-sudo ip address add 192.168.129.1 dev dummy0
+sudo ip address add 192.168.123.254 dev dummy0 # <1>
 sudo ip address show dev dummy0 up
 ------------------------------------------------------------------------
+<1> the IP-address must be the one you've entered as forwarder for the apps wildcard DNS in your network XML.
 
-Start dnsmasq against this interface, defining our wildcard DNS domain *.ocp.ewl.example.com:
+Start dnsmasq against this interface, defining our wildcard DNS domain *.apps.local
 
 ------------------------------------------------------------------------
-sudo dnsmasq --interface=dummy0 --no-daemon --log-queries=extra --bind-interfaces --clear-on-reload --address=/ocp.ewl.example.com/192.168.122.122
+sudo dnsmasq --interface=dummy0 --no-daemon --log-queries=extra \
+	--bind-interfaces --clear-on-reload \
+	--address=/apps.local/192.168.123.123 # <1>
 ------------------------------------------------------------------------
+<1> the IP-address must be the one of the VM where the OCP route will be running, and the domain must of course be the one configured as apps wildcard.
 
 NOTE: the dnsmasq is hence only running on-demand but as it's the case of my OpenShift cluster as well, no big deal.
 
-CAUTION: I guess I had already opened the firewall accordingly and integrated beforehand Satellite 6 with my Libvirtd (e.g. `LIBVIRTD_ARGS="--listen"` in `/etc/sysconfig/libvirtd`, so there is more than the above to it.
+CAUTION: I guess I had already opened the firewall accordingly and integrated beforehand Satellite 6 with my Libvirtd (e.g. `LIBVIRTD_ARGS="--listen"` in `/etc/sysconfig/libvirtd`, so there might be more than the above to it.
 
 === Create a separate network
 
 Call `sudo virsh net-create --file libvirt-network-definition.xml` 
 
 CAUTION: the network definition isn't persistent (on purpose for a start) and needs to be repeated before each start.
-
 
 TODO:: continue description !!!
 
@@ -81,10 +84,28 @@ As an example, we'll provision the `sample.libvirt.example.com` cluster defined 
 
 NOTE: Unless you already have a working inventory, it is recommended that you make a copy of the above mentioned sample inventory and keep it somewhere outside of the casl-ansible directory. This allows you to update/remove/change your casl-ansible source directory without losing your inventory. Also note that it may take some effort to get the inventory just right, hence it is very beneficial to keep it around for future use without having to redo everything.
 
-- make sure `/dev/loopN` isn't mounted on `/var/www/html/installXXX` if you try multiple times (seems to be a bug of the mount module that it doesn't recognize it).
+FIXME:: the instructions are written _for now_ step by step and running locally on the libvirt host as root. This might/should change in the future but this is the current state of the implementation. Each sub-chapter is called after the playbook step constituting the end-to-end playbook.
+
+
+=== provision-instances
+
+- make sure `/dev/loopN` isn't mounted on `/var/www/html/installXXX`, and remove it from your `/etc/fstab` if you try multiple times with errors (something to FIXME).
 - copy and adapt the sample directory with files and inventory:
 * adapt the Libvirt specific parameters to make them compatible with your setup (especially the network)
 - export the variable `LIBVIRT_INV_VM_FILTER` to fit the libvirt names defined for your cluster's VMs, e.g. `export LIBVIRT_INV_VM_FILTER=^ocp_`.
+- export the variables `RHSM_USER` and `RHSM_PASSWD` with your RHSM credentials.
+- if your network isn't persistent create it (see above).
+- make sure that `/tmp/authorized_keys` exists. FIXME: not sure yet for which use cases it is required, I just copy for now my own authorized keys.
+- call `ansible-playbook -i ../../inventory/sample.libvirt.example.com.d/inventory libvirt/provision.yml`.
++
+IMPORTANT: virt-install is only running synchronously because a virt-viewer UI is popping up. Close each virt-viewer once the corresponding installation has happened and not too long after.
++
+- identify the IP address of the infrastructure VM on which the route will run and start accordingly the separate dnsmasq responsible to do the wildcard DNS resolution (see above).
+- login into one of the new VMs and validate that DNS is working correctly:
+* `dig master.local` gives the correct IP address (same for all VMs)
+* `dig -x <master-ip>` works as well
+* `dig -x xxx.apps.local` gives the IP of the route/infranode.
+
 TODO:: continue to adapt / complete the following lines for Libvirt
 
 Run the `end-to-end` provisioning playbook via our link:../images/casl-ansible/[??? installer container image].

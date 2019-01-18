@@ -4,13 +4,11 @@
   <bridge name='virbr3' stp='on' delay='0' />
   <domain name='local' localOnly='no' />
   <dns>
-    <host ip='192.168.123.2'> <!-- FIXME we need to resolve to the route -->
-      <hostname>apps.local</hostname>
-    </host>
+    <forwarder domain='apps.local' addr='192.168.123.254'/>
   </dns>
   <ip address='192.168.123.1' netmask='255.255.255.0'>
     <dhcp>
-      <range start='192.168.123.1' end='192.168.123.254'/>
+      <range start='192.168.123.1' end='192.168.123.250'/>
     </dhcp>
   </ip>
 </network>
