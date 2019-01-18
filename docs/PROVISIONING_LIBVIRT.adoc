@@ -6,6 +6,8 @@
 
 The aim of this setup is to get a flexible OpenShift installation which as little intrusive on the host as possible, under the assumption that a Libvirt installation will mostly be used on laptops or workstations, which also need to continue working well for other purposes.
 
+CAUTION: THIS DOCUMENT AND THE ARTEFACTS PERTAINING TO IT ARE STILL UNDER _HEAVY_ DEVELOPMENT!!!
+
 == Control Host Setup (one time, only)
 
 NOTE: These steps are a canned set of steps serving as an example, and may be different in your environment.
