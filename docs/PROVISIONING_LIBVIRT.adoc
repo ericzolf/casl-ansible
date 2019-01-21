@@ -95,7 +95,6 @@ FIXME:: the instructions are written _for now_ step by step and running locally 
 - copy and adapt the sample directory with files and inventory:
 * adapt the Libvirt specific parameters to make them compatible with your setup (especially the network)
 - export the variable `LIBVIRT_INV_VM_FILTER` to fit the libvirt names defined for your cluster's VMs, e.g. `export LIBVIRT_INV_VM_FILTER=^ocp_`.
-- export the variables `RHSM_USER` and `RHSM_PASSWD` with your RHSM credentials.
 - if your network isn't persistent create it (see above).
 - make sure that `/tmp/authorized_keys` exists. FIXME: not sure yet for which use cases it is required, I just copy for now my own authorized keys.
 - call `ansible-playbook -i ../../inventory/sample.libvirt.example.com.d/inventory libvirt/provision.yml`.
@@ -107,6 +106,21 @@ IMPORTANT: virt-install is only running synchronously because a virt-viewer UI i
 * `dig master.local` gives the correct IP address (same for all VMs)
 * `dig -x <master-ip>` works as well
 * `dig -x xxx.apps.local` gives the IP of the route/infranode.
+
+NOTE: up till now, I've worked as root to avoid complications. From here on, I'm working again as normal user on the control host.
+
+=== pre-install
+
+IMPORTANT: you need to have ssh-ed once to each node to make sure that their SSH-signature is already in your known_hosts file.
+
+Things to consider:
+
+- make sure the above preparations are still active (network, DNS, environment variables)
+- define the environment variables `RHSM_USER` and `RHSM_PASSWD` or use an activation key (TODO describe activation key / Satellite 6 approach).
++
+CAUTION: because there is no trace of OpenShift on the system, it is relatively sure that auto-attach will fail. Hence make sure `rhsm_pool` or `rhsm_pool_ids` are defined in the inventory (or on the command line).
+
+Then call `ansible-playbook -i ../../inventory/sample.libvirt.example.com.d/inventory/ pre-install.yml -e rhsm_pool='^{POOL_NAME}$'`.
 
 TODO:: continue to adapt / complete the following lines for Libvirt
 
