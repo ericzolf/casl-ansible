@@ -122,6 +122,13 @@ CAUTION: because there is no trace of OpenShift on the system, it is relatively 
 
 Then call `ansible-playbook -i ../../inventory/sample.libvirt.example.com.d/inventory/ pre-install.yml -e rhsm_pool='^{POOL_NAME}$'`.
 
+=== install
+
+- make sure the credentials are set in the environment, either using your RHSM credentials or adding specific ones (OREG_AUTH_USER and OREG_AUTH_PASSWORD, see inventory OSEv3.yml for details).
+- call `ansible-playbook -i ../../inventory/sample.libvirt.example.com.d/inventory/ install.yml` and wait...
+- once the playbook has run successfully, you need to enter `master.local` into the `/etc/hosts` of your workstation (unless it's using the right DNS), and then you can point your browser to `https://master.local:8443` and login as admin (using the IP address directly won't work).
+
+
 TODO:: continue to adapt / complete the following lines for Libvirt
 
 Run the `end-to-end` provisioning playbook via our link:../images/casl-ansible/[??? installer container image].

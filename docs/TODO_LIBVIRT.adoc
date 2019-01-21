@@ -72,3 +72,7 @@ NOTE: `{provisioner}` and `{PROVISIONER}` stand for your provisioner (e.g. libvi
 ** `hosting_infrastructure` set to `{provisioner}`.
 ** `docker_storage_block_device` e.g. `/dev/vdb` (implying that each created VM has two disks, one being reserved for Docker).
 - create a document `docs/PROVISIONING_{PROVISIONER}.adoc` explaining how to adapt and use your provisioner. Some notes about the considerations you've made during implementation is surely not a bad idea.
+
+== Perhaps fix inventory to avoid unwanted actions
+
+The installer executed 1 action on cloud-host.local and that doesn't seem right but no clue which one (it was marked OK). It would also be good to review the 22 OK-actions on localhost.
