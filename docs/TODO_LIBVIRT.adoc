@@ -53,3 +53,22 @@ Following sources have been identified and could be used:
 
 - https://github.com/nmajorov/libvirt-okd
 - https://docs.google.com/document/d/1Mbd2v6j3AQlbiY_zbZF5fWWwXvenQf8EDw7oW5907Hs/edit?usp=drivesdk
+
+== Improve the CONTRIBUTE_PROVISIONER.md
+
+Just taking notes for future improvements as I learn myself through casl, feel free to already review, I'll add them to the already document once I'm finished here:
+
+NOTE: `{provisioner}` and `{PROVISIONER}` stand for your provisioner (e.g. libvirt etc.) either in capitals or not.
+
+- create following directories in the `casl-ansible` repository:
+* `playbooks/openshift/{provisioner}`
+* `inventory/sample.{provisioner}.example.com.d/inventory` (and optionally `files` or others)
+- create a playbook which creates VMs from your provisioner as `playbooks/openshift/{provisioner}/provision.yml` and make sure it is called from `playbooks/openshift/provision-instances.yml` based on the variable `hosting_infrastructure` set to your provisioner.
+* re-use as much as possible roles from the `infra-ansible` repo or add new generic roles that support your infrastructure provider independently from `casl-ansible`.
+- create a sample inventory respecting following requirements:
+* it respects the usual OpenShift inventory settings and makes sure that the nodes created during the provisioning phase are neatly put into the right groups.
+* this most probably pre-requisites that there is a dynamic inventory script created, which pulls the information about the VMs from the provisioner. This script is created into `inventory/scripts/` and linked into `inventory/sample.{provisioner}.example.com.d/inventory` (FIXME: why this complexity?). Your script must especially make sure that `ansible_host` is defined so that the Ansible connection isn't relying on the name in the inventory, which is recommended to be independent from the provisioning.
+* it defines following variables required during the next steps of the end-to-end process:
+** `hosting_infrastructure` set to `{provisioner}`.
+** `docker_storage_block_device` e.g. `/dev/vdb` (implying that each created VM has two disks, one being reserved for Docker).
+- create a document `docs/PROVISIONING_{PROVISIONER}.adoc` explaining how to adapt and use your provisioner. Some notes about the considerations you've made during implementation is surely not a bad idea.
