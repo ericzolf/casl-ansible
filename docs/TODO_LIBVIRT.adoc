@@ -76,3 +76,27 @@ NOTE: `{provisioner}` and `{PROVISIONER}` stand for your provisioner (e.g. libvi
 == Perhaps fix inventory to avoid unwanted actions
 
 The installer executed 1 action on cloud-host.local and that doesn't seem right but no clue which one (it was marked OK). It would also be good to review the 22 OK-actions on localhost.
+
+== Fix warnings and errors in oc adm diagnostics
+
+Quite verbose and I don't have quite enough experience to decide which errors are relevant and which not:
+
+- `E0121 12:41:32.229577   80499 helpers.go:134] Encountered config error json: unknown field "masterCount" in object *config.MasterConfig, raw JSON:`
+- errors about AggregatedLogging, Kibana, etc...
+- many notes/infos about extra permissions
+- error about missing iptables:
++
+------------------------------------------------------------------------
+ERROR: [DS3002 from diagnostic UnitStatus@openshift/origin/pkg/oc/cli/admin/diagnostics/diagnostics/systemd/unit_status.go:59]
+       systemd unit atomic-openshift-node depends on unit iptables, which is not loaded.
+
+       iptables is used by nodes for container networking.
+       Connections to a container will fail without it.
+       An administrator probably needs to install the iptables unit with:
+
+         # yum install iptables
+
+       If it is already installed, you may need to reload the definition with:
+
+         # systemctl reload iptables
+------------------------------------------------------------------------
