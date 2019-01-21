@@ -1,5 +1,8 @@
 ---
 
+# FIXME: it's not optimal, working as non-root should be the default
+ansible_user: root
+
 deployment_type: openshift-enterprise
 openshift_deployment_type: openshift-enterprise
 openshift_master_cluster_method: native
@@ -32,10 +35,4 @@ osm_cluster_network_cidr: 10.1.0.0/16
 openshift_enable_service_catalog: false
 openshift_hosted_prometheus_deploy: false
 openshift_cfme_install_app: false
-
-
-
-
-
-
 

@@ -11,9 +11,6 @@ hosting_infrastructure: libvirt
 # Cluster Environment ID to uniquely identify the environment
 env_id: env1
 
-ansible_user: root
-ansible_become: true
-
 dns_domain: "local"
 
 docker_storage_block_device: "/dev/vdb"
