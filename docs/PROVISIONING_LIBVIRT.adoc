@@ -128,8 +128,34 @@ Then call `ansible-playbook -i ../../inventory/sample.libvirt.example.com.d/inve
 - call `ansible-playbook -i ../../inventory/sample.libvirt.example.com.d/inventory/ install.yml` and wait...
 - once the playbook has run successfully, you need to enter `master.local` into the `/etc/hosts` of your workstation (unless it's using the right DNS), and then you can point your browser to `https://master.local:8443` and login as admin (using the IP address directly won't work).
 
+=== post-install
 
-TODO:: continue to adapt / complete the following lines for Libvirt
+- export again `LIBVIRT_INV_VM_FILTER=^ocp_` if not done
+- call `ansible-playbook -i ../../inventory/sample.libvirt.example.com.d/inventory/ post-install.yml`
+
+=== daily usage
+
+Once you've gone through all the previous phases, you should have a running OpenShift cluster but many aspects are (still) transient and need to be done each time you restart your host (assumed to be your laptop).
+
+For this, I have a created a small script, which I source as root:
+
+------------------------------------------------------------------------
+virsh net-create --file ...Git/casl-ansible/inventory/sample.libvirt.example.com.d/files/libvirt-network-definition.xml 
+cp ~/.ssh/authorized_keys /tmp
+ip link add dummy0 type dummy
+ip address add 192.168.123.254 dev dummy0 # <1>
+ip address show dev dummy0 up
+dnsmasq --interface=dummy0 --no-daemon --log-queries=extra --bind-interfaces \
+	--clear-on-reload --address=/apps.local/192.168.123.64 # <2>
+------------------------------------------------------------------------
+<1> replace it with the IP you've set as forwarder in your network definition
+<2> replace the IP with the one of your route/infra node. You can get rid of the `--no-daemon` option if you want dnsmasq to run in the background.
+
+After that you can start your Libvirt hosts making up the cluster and they should work as before the shutdown.
+
+== Using a container to run the playbooks end-to-end
+
+TODO:: this requires some more work in terms of automation, especially on the Libvirt host itself (network and DNS), which will be done at a later stage. You may ignore for now the rest of this document.
 
 Run the `end-to-end` provisioning playbook via our link:../images/casl-ansible/[??? installer container image].
 

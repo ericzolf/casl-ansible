@@ -105,3 +105,18 @@ ERROR: [DS3002 from diagnostic UnitStatus@openshift/origin/pkg/oc/cli/admin/diag
 
          # systemctl reload iptables
 ------------------------------------------------------------------------
+
+== Automate network creation in Libvirt
+
+Shouldn't be a big deal using the virt-net module of Ansible (requires python2/3-lxml).
+
+It would also make sense to replace the XML file with an XML template to get some more flexibility.
+
+== Automate the dnsmasq service for the apps wildcard domain
+
+------------------------------------------------------------------------
+ip link add dummy0 type dummy
+ip address add 192.168.123.254 dev dummy0
+ip address show dev dummy0 up
+dnsmasq --interface=dummy0 --no-daemon --log-queries=extra --bind-interfaces --clear-on-reload --address=/apps.local/192.168.123.64
+------------------------------------------------------------------------
