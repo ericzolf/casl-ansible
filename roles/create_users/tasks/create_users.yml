@@ -1,23 +1,18 @@
 ---
 
-- name: 'Install required packages'
+- name: 'Install packages required for user creation in htpasswd'
   package:
-    name: '{{ item }}'
+    name: "{{ ((ansible_python_interpreter | default('somepython'))[-1] == '3') | ternary('python3-passlib','python-passlib') }}"
     state: installed
-  with_items:
-  - python-passlib
 
-- name: "Use the create_users inventory info"
-  set_fact:
-    users: "{{ create_users }}"
-
-- name: "Create {{ users.num_users }} htpasswd users"
+- name: "Create {{ create_users.num_users }} htpasswd users"
   htpasswd:
-    path: "{{ users.passwd_file }}"
-    name: "{{ item }}"
-    password: "{{ users.password }}"
+    path: "{{ create_users.passwd_file }}"
+    name: "{{ create_users.prefix + '%02d' | format(item) }}"
+    password: "{{ create_users.password }}"
     owner: root
     group: root
     mode: 0600
-  with_sequence: start=0 end="{{ users.num_users }}" format="{{ users.prefix }}%02d"
-
+  loop: "{{ range(1, create_users.num_users + 1)|list }}"
+  loop_control:
+    label: "{{ create_users.prefix + '%02d' | format(item) }}"
