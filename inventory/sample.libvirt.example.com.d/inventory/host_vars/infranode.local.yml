@@ -2,7 +2,7 @@
 libvirt_name: "ocp_infranode.local"
 libvirt_title: "OCP Infra Node"
 libvirt_description: "Infrastructure Node for OpenShift"
-libvirt_memory: "2048"
+libvirt_memory: "2560"
 libvirt_vcpus: "1"
 libvirt_disk_size: "15"
 libvirt_os_variant: "centos7.0"
