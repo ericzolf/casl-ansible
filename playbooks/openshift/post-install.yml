@@ -4,6 +4,7 @@
   roles:
     - role: sync-keys
       key_url: "{{ openshift_authorized_key_url | default('') }}"
+      key_file: "{{ openshift_authorized_key_file | default('') }}"
 
 - hosts: masters
   roles:

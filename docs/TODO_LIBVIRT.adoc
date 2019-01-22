@@ -68,9 +68,14 @@ NOTE: `{provisioner}` and `{PROVISIONER}` stand for your provisioner (e.g. libvi
 - create a sample inventory respecting following requirements:
 * it respects the usual OpenShift inventory settings and makes sure that the nodes created during the provisioning phase are neatly put into the right groups.
 * this most probably pre-requisites that there is a dynamic inventory script created, which pulls the information about the VMs from the provisioner. This script is created into `inventory/scripts/` and linked into `inventory/sample.{provisioner}.example.com.d/inventory` (FIXME: why this complexity?). Your script must especially make sure that `ansible_host` is defined so that the Ansible connection isn't relying on the name in the inventory, which is recommended to be independent from the provisioning.
+* The following groups are foreseen:
+** `cluster_hosts` has `OSEv3` as sole children and holds the non-OpenShift-specific variables
+** `seed-hosts` ???
 * it defines following variables required during the next steps of the end-to-end process:
 ** `hosting_infrastructure` set to `{provisioner}`.
-** `docker_storage_block_device` e.g. `/dev/vdb` (implying that each created VM has two disks, one being reserved for Docker).
+* following variables are optional:
+** `docker_storage_block_device` e.g. `/dev/vdb` (implying that each created VM has two disks, one being reserved for Docker???).
+** `openshift_authorized_key_url` or `openshift_authorized_key_file` shall contain a URL or a path to the SSH key authorized for the Ansible user.
 - create a document `docs/PROVISIONING_{PROVISIONER}.adoc` explaining how to adapt and use your provisioner. Some notes about the considerations you've made during implementation is surely not a bad idea.
 
 == Perhaps fix inventory to avoid unwanted actions

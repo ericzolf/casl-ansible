@@ -1,0 +1,10 @@
+---
+# non-OpenShift-specific variables applicable to all OCP cluster hosts aka OSEv3
+
+# FIXME: it's not optimal, working as non-root should be the default
+ansible_user: root
+
+# URL or Path to an authorized SSH key for the Ansible user
+# Both can be defined but URL takes precedence over file.
+#openshift_authorized_key_url: "http://url-to-some-authorized-public-key"
+openshift_authorized_key_file: "~/.ssh/id_rsa.pub"
