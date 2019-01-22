@@ -2,3 +2,9 @@
 
 openshift_node_group_name: 'node-config-master'
 
+# create 5 users with name devel01 to devel05 and password redhat
+create_users:
+  num_users: 5
+  prefix: devel
+  passwd_file: /etc/origin/master/htpasswd
+  password: redhat
